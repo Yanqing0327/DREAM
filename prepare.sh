@@ -1,0 +1,2 @@
+pip install efficientnet_pytorch
+pip install fast_pytorch_kmeans
