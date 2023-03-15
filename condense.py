@@ -649,8 +649,6 @@ def condense(args, logger, device='cuda'):
                 [synset.data.detach().cpu(), synset.targets.cpu()],
                 os.path.join(args.save_dir, f'data{it+1}.pt'))
             print("img and data saved!")
-            # It is okay to clamp data to [0, 1] at here.
-            # synset.data.data = torch.clamp(synset.data.data, min=0., max=1.)
 
             if not args.test:
                 synset.test(args, val_loader, logger)
