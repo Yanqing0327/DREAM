@@ -1,6 +1,3 @@
----
-typora-root-url: figs
----
 
 Official implementation of  ["DREAM: Efficient Dataset Distillation by Representative Matching"](https://arxiv.org/abs/2302.14416)
 
