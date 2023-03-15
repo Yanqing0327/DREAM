@@ -36,9 +36,12 @@ You can also modify the parameters as needed to reproduce the results on other d
 
 ## Citation
 
+```
 @article{liu2023dream,
   title={{DREAM}: Efficient Dataset Distillation by Representative Matching},
   author={Liu, Yanqing and Gu, Jianyang and Wang, Kai and Zhu, Zheng and Jiang, Wei and You, Yang},
   journal={arXiv preprint arXiv:2302.14416},
   year={2023}
 }
+```
+
