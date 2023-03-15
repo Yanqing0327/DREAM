@@ -8,11 +8,11 @@ Dataset distillation aims to synthesize small datasets with little information l
 
 <div align=center><center><img src="figs/hist_intro.png" align="middle" width="50%"></center></div>
 
-<center>(a) The gradient norm distribution of the plane class in CIFAR10.</center>
+<div align=center><center>(a) The gradient norm distribution of the plane class in CIFAR10.</center></div>
 
 <div align=center><center><img src="figs/dc_comp.png" align="middle" width="50%"></center></div>
 
-<center>(b) The distilled dataset comparison between DC (Upper row) and DC with DREAM strategy (Bottom row) on CIFAR-100 (plane, car, dog, cat classes).</center>
+<div align=center><center>(b) The distilled dataset comparison between DC (Upper row) and DC with DREAM strategy (Bottom row) on CIFAR-100 (plane, car, dog, cat classes).DREAM introduces more obvious categorical characteristics and variety to the distilled image.</center></div>
 
 ## Datasets
 
