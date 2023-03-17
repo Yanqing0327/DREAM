@@ -14,6 +14,16 @@ Dataset distillation aims to synthesize small datasets with little information l
 
 <div align=center><center>(b) The distilled dataset comparison between DC (Upper row) and DC with DREAM strategy (Bottom row) on CIFAR-100 (plane, car, dog, cat classes).DREAM introduces more obvious categorical characteristics and variety to the distilled image.</center></div>
 
+## Performance
+
+The accuracy curves under different target matching samples:
+
+<div align=center><center>
+    <img src="figs/acc-curve.png" align="middle" width="33%">
+    </center></div>
+
+It is obvious that DREAM reduces the distilling iterations by more than **8 times** without performance drop.
+
 ## Datasets
 
 - MNIST
