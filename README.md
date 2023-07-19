@@ -1,6 +1,6 @@
 # Efficient Dataset Distillation by Representative Matching
 
-Official implementation of  ["DREAM: Efficient Dataset Distillation by Representative Matching"](https://arxiv.org/abs/2302.14416)
+Official implementation of  ["DREAM: Efficient Dataset Distillation by Representative Matching"](https://arxiv.org/abs/2302.14416), published as a conference paper at ICCV 2023.
 
 ## Abstract
 
