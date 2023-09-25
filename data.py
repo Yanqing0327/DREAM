@@ -26,34 +26,6 @@ MEANS['fashion'] = [0.2861]
 STDS['fashion'] = [0.3530]
 MEANS['tiny'] = [0.485, 0.456, 0.406]
 STDS['tiny'] = [0.229, 0.224, 0.225]
-class Data:
-    def __init__(self, X_train, Y_train):
-        self.X_train = X_train
-        self.Y_train = Y_train
-        
-        self.n_pool = len(X_train)
-    
-    def get_class_data(self,c):
-        idxs = torch.arange(self.n_pool)
-        idxs_c=torch.where(self.Y_train[idxs]==c)
-        idxs=idxs[idxs_c[0]]
-        dst_train = Dataset(self.X_train[idxs], self.Y_train[idxs])
-        trainloader = torch.utils.data.DataLoader(dst_train, batch_size=256, shuffle=False, num_workers=0)
-        return idxs, trainloader
-    
-class Dataset(torch.utils.data.Dataset):
-    def __init__(self, images, labels):
-        # images: NxCxHxW tensor
-        self.images = images.float()
-        self.targets = labels
-
-    def __getitem__(self, index):
-        sample = self.images[index]
-        target = self.targets[index]
-        return sample, target
-
-    def __len__(self):
-        return self.images.shape[0]
     
 
 class TensorDataset(torch.utils.data.Dataset):
@@ -294,20 +266,23 @@ def transform_fashion(augment=False, from_tensor=False, normalize=True):
     test_transform = transforms.Compose(cast + normal_fn)
 
     return train_transform, test_transform
-def transform_tiny(augment=False, from_tensor=False, normalize=True):
+
+def transform_tinyimagenet(augment=False, from_tensor=False, normalize=True):
     if not augment:
         aug = []
     else:
         aug = [transforms.RandomCrop(64, padding=4), transforms.RandomHorizontalFlip()]
-        print("Dataset with basic tiny augmentation")
+        print("Dataset with basic Cifar augmentation")
 
     if from_tensor:
         cast = []
     else:
         cast = [transforms.ToTensor()]
 
+    mean = [0.485, 0.456, 0.406]
+    std = [0.229, 0.224, 0.225]
     if normalize:
-        normal_fn = [transforms.Normalize(mean=MEANS['tiny'], std=STDS['tiny'])]
+        normal_fn = [transforms.Normalize(mean=mean, std=std)]
     else:
         normal_fn = []
 

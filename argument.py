@@ -120,10 +120,6 @@ parser.add_argument('--momentum', default=0.9, type=float, help='momentum')
 parser.add_argument('--weight-decay', '--wd', default=5e-4, type=float, help='weight decay')
 parser.add_argument('--seed', default=0, type=int, help='random seed for training')
 parser.add_argument('--pretrained', action='store_true')
-parser.add_argument('--interval',
-                    type=int,
-                    default=10,
-                    help='cluster every interval inner_loop')
 
 # Mixup
 parser.add_argument('--mixup',
@@ -199,6 +195,10 @@ parser.add_argument('--f_idx',
                     type=str,
                     default='4',
                     help='feature matching layer. comma separation')
+parser.add_argument('--interval',
+                    type=int,
+                    default=10,
+                    help='cluster every interval inner_loop')
 ## Optimization
 # For small datasets, niter=2000 is enough for the full convergence.
 # For faster optimzation, you can early stop the code based on the printed log.

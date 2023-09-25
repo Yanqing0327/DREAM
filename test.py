@@ -9,7 +9,7 @@ from torch.utils.data import Subset
 from train import define_model, train
 from data import TensorDataset, ImageFolder, MultiEpochsDataLoader
 from torchvision import datasets, transforms
-from data import save_img, transform_imagenet, transform_cifar, transform_svhn, transform_mnist, transform_fashion,transform_tiny
+from data import save_img, transform_imagenet, transform_cifar, transform_svhn, transform_mnist, transform_fashion, transform_tinyimagenet
 import models.resnet as RN
 import models.densenet_cifar as DN
 from coreset import randomselect, herding
@@ -273,7 +273,7 @@ def load_data_path(args):
         elif args.dataset == 'fashion':
             transform_fn = transform_fashion
         elif args.dataset == 'tiny':
-            transform_fn = transform_tiny
+            transform_fn = transform_tinyimagenet
         train_transform, test_transform = transform_fn(augment=args.augment, from_tensor=False)
 
         # Load condensed dataset

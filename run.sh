@@ -1,1 +1,1 @@
-python3 condense.py --reproduce  -d cifar10 -f 2 --ipc 10
+python condense.py --reproduce  -d cifar10 -f 2 --ipc 10

@@ -36,6 +36,15 @@ def set_arguments(args):
             args.niter = 1000
             args.lr_img = 3e-3
             args.aug_type = 'none'
+        elif args.dataset == 'tinyimagenet':
+            args.batch_real = 64
+            args.n_data = 1000
+            args.nclass=200
+            args.depth = 4
+            args.metric = 'mse'
+            args.lr_img = 5e-3
+            if args.ipc==50:
+                args.lr_img = 1e-6
         else:
             raise AssertionError("Not supported dataset!")
     else:

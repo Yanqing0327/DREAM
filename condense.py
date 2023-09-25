@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 from torchvision import datasets, transforms
-from data import transform_imagenet, transform_cifar, transform_svhn, transform_mnist, transform_fashion
+from data import transform_imagenet, transform_cifar, transform_svhn, transform_mnist, transform_fashion, transform_tinyimagenet
 from data import TensorDataset, ImageFolder, save_img
 from data import ClassDataLoader, ClassMemDataLoader, MultiEpochsDataLoader
 from data import MEANS, STDS
@@ -15,8 +15,7 @@ from misc.augment import DiffAug
 from misc import utils
 from math import ceil
 import glob
-from utils import get_strategy
-from data import Data
+from new_strategy import NEW_Strategy
 class Synthesizer():
     """Condensed data class
     """
@@ -209,6 +208,8 @@ class Synthesizer():
             train_transform, _ = transform_mnist(augment=augment, from_tensor=True)
         elif args.dataset == 'fashion':
             train_transform, _ = transform_fashion(augment=augment, from_tensor=True)
+        elif args.dataset == 'tinyimagenet':
+            train_transform, _ = transform_tinyimagenet(augment=augment, from_tensor=True)
 
         data_dec = []
         target_dec = []
@@ -299,6 +300,29 @@ def load_resized_data(args):
 
         val_dataset = datasets.FashionMNIST(args.data_dir, download=True,train=False, transform=transform_test)
         train_dataset.nclass = 10
+    
+    elif args.dataset == 'tinyimagenet':
+        channel = 3
+        mean = [0.485, 0.456, 0.406]
+        std = [0.229, 0.224, 0.225]
+        data = torch.load(os.path.join(args.data_dir, 'tinyimagenet.pt'), map_location='cpu')
+
+        images_train = data['images_train']
+        labels_train = data['labels_train']
+        images_train = images_train.detach().float() / 255.0
+        labels_train = labels_train.detach()
+
+        train_dataset = TensorDataset(images_train, labels_train)  # no augmentation
+        train_dataset.nclass=200
+        images_val = data['images_val']
+        labels_val = data['labels_val']
+        images_val = images_val.detach().float() / 255.0
+        labels_val = labels_val.detach()
+
+        for c in range(channel):
+            images_val[:, c] = (images_val[:, c] - mean[c]) / std[c]
+
+        val_dataset = TensorDataset(images_val, labels_val)  # no augmentation
 
     elif args.dataset == 'imagenet':
         traindir = os.path.join(args.imagenet_dir, 'train')
@@ -462,12 +486,6 @@ def condense(args, logger, device='cuda'):
     images_all = torch.cat(images_all, dim=0).to(device)
     labels_all = torch.tensor(labels_all, dtype=torch.long, device=device)
 
-    dataset = Data(images_all, labels_all)
-    def get_init_images(c,n):
-    
-        query_idxs= strategy_init.query(c,n)
-
-        return images_all[query_idxs]
     if args.load_memory:
         loader_real = ClassMemDataLoader(trainset, batch_size=args.batch_real)
     else:
@@ -478,33 +496,41 @@ def condense(args, logger, device='cuda'):
                                       pin_memory=True,
                                       drop_last=True)
     nclass = trainset.nclass
+    indices_class = [[] for c in range(nclass)]
+    for i in range(len(labels_all)):
+        indices_class[labels_all[i]].append(i)
+    length_list = []
+    for i in range(nclass):
+        length_list.append(len(indices_class[i]))
+
+    img_class=[]
+    for i in range(args.nclass):
+        img, lable = loader_real.class_sample(i, length_list[i])
+        img_class.append(img)
+    print('class number:',len(img_class))
+
     nch, hs, ws = trainset[0][0].shape
 
     # Define syn dataset
     synset = Synthesizer(args, nclass, nch, hs, ws)
 
     model = define_model(args, nclass).to(device)
-    model.train()
+    model.eval()
     optim_net = optim.SGD(model.parameters(),
                         args.lr,
                         momentum=args.momentum,
                         weight_decay=args.weight_decay)
     criterion = nn.CrossEntropyLoss()
     aug, aug_rand = diffaug(args)
-    '''If ResNet is used to extract features, training in advance is required'''
-    # for _ in range(10):
-    #     train_epoch(args,
-    #                 loader_real,
-    #                 model,
-    #                 criterion,
-    #                 optim_net,
-    #                 aug=aug_rand,
-    #                 mixup=args.mixup_net)
-    strategy_init = get_strategy('KMeansSampling')(dataset, model)
+
     if args.init == 'kmean':
         print("Kmean initialize synset")
         for c in range(synset.nclass):
-            synset.data.data[c*synset.ipc:(c+1)*synset.ipc] = get_init_images(c, synset.ipc).detach().data
+            img, lable = loader_real.class_sample(c, length_list[c])
+            
+            strategy = NEW_Strategy(img, model)
+            query_idxs= strategy.query(args.ipc)
+            synset.data.data[c*synset.ipc:(c+1)*synset.ipc] = img[query_idxs].detach().data
     elif args.init == 'random':
         print("Random initialize synset")
         for c in range(synset.nclass):
@@ -517,7 +543,10 @@ def condense(args, logger, device='cuda'):
                 img, _ = loader_real.class_sample(c, synset.ipc * synset.factor**2)
                 img = img.data.to(synset.device)
             else:
-                img = get_init_images(c, synset.ipc * synset.factor**2).detach()
+                img=img_class[c]
+                strategy = NEW_Strategy(img, model)
+                query_idxs= strategy.query(synset.ipc * synset.factor**2)
+                img = img[query_idxs].detach()
                 img = img.data.to(synset.device)
 
             s = synset.size[0] // synset.factor
@@ -580,16 +609,6 @@ def condense(args, logger, device='cuda'):
 
             if args.pt_from >= 0:
                 pretrain_sample(args, model)
-            if args.early > 0:
-                for _ in range(args.early):
-                    train_epoch(args,
-                                loader_real,
-                                model,
-                                criterion,
-                                optim_net,
-                                aug=aug_rand,
-                                mixup=args.mixup_net)
-        
         
         loss_total = 0
         
@@ -598,10 +617,18 @@ def condense(args, logger, device='cuda'):
             ts.set()
             # Update synset
             for c in range(nclass):
+
                 if ot % args.interval == 0:
-                    strategy = get_strategy('KMeansSampling')(dataset, model)
-                    query_index = strategy.query_match_sample(c,args.batch_real)
-                    query_list[c] = query_index
+                    
+                    img=img_class[c]
+                    
+                    strategy = NEW_Strategy(img, model)
+
+                    query_idxs= strategy.query(args.batch_real)
+                    
+                    query_list[c] = query_idxs
+
+                images_all=img_class[c]
                 img = images_all[query_list[c]]
                 lab = torch.tensor([np.ones(img.size(0))*c], dtype=torch.long, requires_grad=False, device=device).view(-1)
                 img_syn, lab_syn = synset.sample(c, max_size=args.batch_syn_max)
