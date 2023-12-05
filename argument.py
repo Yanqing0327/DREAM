@@ -120,6 +120,10 @@ parser.add_argument('--momentum', default=0.9, type=float, help='momentum')
 parser.add_argument('--weight-decay', '--wd', default=5e-4, type=float, help='weight decay')
 parser.add_argument('--seed', default=0, type=int, help='random seed for training')
 parser.add_argument('--pretrained', action='store_true')
+parser.add_argument('--interval',
+                    type=int,
+                    default=10,
+                    help='cluster every interval inner_loop')
 
 # Mixup
 parser.add_argument('--mixup',
@@ -152,6 +156,10 @@ parser.add_argument('--test', action='store_true', help='for debugging, do not s
 parser.add_argument('--time', action='store_true', help='measuring time for each step')
 
 # Condense
+parser.add_argument('--subsample',
+                    type=int,
+                    default=1,
+                    help='subcluster sample number')
 parser.add_argument('-i', '--ipc', type=int, default=-1, help='number of condensed data per class')
 parser.add_argument('-f',
                     '--factor',
@@ -181,8 +189,8 @@ parser.add_argument('-a',
 ## Matching objective
 parser.add_argument('--match',
                     type=str,
-                    default='grad',
-                    choices=['feat', 'grad'],
+                    default='bi_match',
+                    choices=['feat', 'grad','bi_match'],
                     help='feature or gradient matching')
 parser.add_argument('--metric',
                     type=str,
@@ -195,10 +203,6 @@ parser.add_argument('--f_idx',
                     type=str,
                     default='4',
                     help='feature matching layer. comma separation')
-parser.add_argument('--interval',
-                    type=int,
-                    default=10,
-                    help='cluster every interval inner_loop')
 ## Optimization
 # For small datasets, niter=2000 is enough for the full convergence.
 # For faster optimzation, you can early stop the code based on the printed log.
@@ -297,6 +301,11 @@ if args.dataset == 'fashion':
     args.nclass = 10
     args.size = 28
     args.nch = 1
+    args.mix_p = 0.5
+    args.dsa = True
+
+if args.dataset == 'tinyimagenet':
+    args.size = 64
     args.mix_p = 0.5
     args.dsa = True
 
