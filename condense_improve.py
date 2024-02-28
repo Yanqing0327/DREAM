@@ -10,7 +10,7 @@ from data import TensorDataset, ImageFolder, save_img
 from data import ClassDataLoader, ClassMemDataLoader, MultiEpochsDataLoader
 from data import MEANS, STDS
 from train import define_model, train_epoch
-from test import test_data, load_ckpt
+from test import new_test_data, load_ckpt
 from misc.augment import DiffAug
 from misc import utils
 from math import ceil
@@ -244,11 +244,11 @@ class Synthesizer():
         """Condensed data evaluation
         """
         loader = self.loader(args, args.augment)
-        best,test_resnet = test_data(args, loader, val_loader, test_resnet=False, logger=logger)
+        best,test_resnet = new_test_data(args, loader, val_loader, test_resnet=False, logger=logger)
         if best>self.best1 and test_resnet==False:
             self.best1 = best
         if bench and not (args.dataset in ['mnist', 'fashion']):
-            best,test_resnet = test_data(args, loader, val_loader, test_resnet=True, logger=logger)
+            best,test_resnet = new_test_data(args, loader, val_loader, test_resnet=True, logger=logger)
             if best>self.best2 and test_resnet==True:
                 self.best2 = best
 

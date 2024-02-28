@@ -406,6 +406,39 @@ def test_data(args,
         logger(
             f'Repeat {repeat} => Best, last acc: {np.mean(best_acc_l):.1f} {np.mean(acc_l):.1f}\n')
 
+def new_test_data(args,
+              train_loader,
+              val_loader,
+              test_resnet=False,
+              model_fn=None,
+              repeat=1,
+              logger=print,
+              num_val=4):
+    """Train neural networks on condensed data
+    """
+
+    args.epoch_print_freq = args.epochs // num_val
+
+    if model_fn is None:
+        model_fn_ls = [define_model]
+        if test_resnet:
+            model_fn_ls = [resnet10_bn]
+    else:
+        model_fn_ls = [model_fn]
+
+    for model_fn in model_fn_ls:
+        best_acc_l = []
+        acc_l = []
+        for _ in range(repeat):
+            model = model_fn(args, args.nclass, logger=logger)
+            best_acc, acc = train(args, model, train_loader, val_loader, logger=logger)
+            best_acc_l.append(best_acc)
+            acc_l.append(acc)
+        logger(
+            f'Repeat {repeat} => Best, last acc: {np.mean(best_acc_l):.1f} {np.mean(acc_l):.1f}\n')
+    
+    return np.mean(best_acc_l),test_resnet
+
 
 if __name__ == '__main__':
     from argument import args
